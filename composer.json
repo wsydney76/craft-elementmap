@@ -1,0 +1,29 @@
+{
+	"name": "wsydney76/elementmap",
+	"description": "Simple visualization panel that lists related elements in their associated editors.",
+	"type": "craft-plugin",
+	"version": "1.3.0",
+	"license": "MIT",
+  "authors": [
+    {
+      "name": "wsydney76",
+      "homepage": "https://github.com/wsydney76"
+    }
+  ],
+	"require": {
+		"craftcms/cms": "^3.0.0-RC1"
+	},
+	"autoload": {
+		"psr-4": {
+			"wsydney76\\elementmap\\": "src/"
+		}
+	},
+	"extra": {
+		"name": "Element Map",
+		"handle": "elementmap",
+		"schemaVersion": "1.0.0",
+		"hasCpSettings": false,
+		"hasCpSection": false,
+		"class": "wsydney76\\elementmap\\ElementMap"
+	}
+}

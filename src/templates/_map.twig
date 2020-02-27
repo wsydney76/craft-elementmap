@@ -1,0 +1,80 @@
+{%- do view.registerAssetBundle("wsydney76\\elementmap\\assets\\ElementMapBundle") -%}
+
+<a class="btn" id="map-btn">{{ 'Relationships'|t('elementmap') }}</a>
+
+<div class="hud-wrapper hidden">
+    <div id="map-content">
+        <div class="map">
+            <label>{{ 'References to This Element'|t('elementmap') }}</label>
+            <ul>
+                {% for element in map.incoming %}
+                    <li>
+                        <a target="_blank" href="{{ element.url }}" data-id="{{ element.id }}" data-editable><span
+                                    class="icon icon-mask">{{ svg(element.icon) }}</span>{{ element.title }}</a>
+                    </li>
+                {% endfor %}
+                {% if map.incoming | length == 0 %}
+                    <li>{{ 'None'|t('elementmap') }}</li>
+                {% endif %}
+            </ul>
+        </div>
+        <div class="map">
+            <label>{{ 'References to Other Elements'|t('elementmap') }}</label>
+            <ul>
+                {% for element in map.outgoing %}
+                    <li>
+                        <a target="_blank" href="{{ element.url }}" data-id="{{ element.id }}" data-editable><span
+                                    class="icon icon-mask">{{ svg(element.icon) }}</span>{{ element.title }}</a>
+                    </li>
+                {% endfor %}
+                {% if map.outgoing | length == 0 %}
+                    <li>{{ 'None'|t('elementmap') }}</li>
+                {% endif %}
+            </ul>
+        </div>
+
+        <div>
+            <a href="javascript:window.location.reload()">{{ 'Reload page to refresh'|t('elementmap') }}</a>
+        </div>
+
+
+    </div>
+</div>
+
+
+{% js at POS_END %}
+var $btn = $('#map-btn'),
+    $form = $('#map-content');
+$btn.on('click', function() {
+    var hud = new Garnish.HUD($btn, $form, {
+        orientations: ['top', 'bottom', 'right', 'left'],
+        hudClass: 'hud guide-hud',
+    });
+    return false;
+});
+{% endjs %}
+
+{% css %}
+.map svg {
+    width: 20px !important;
+    height: 20px !important;
+    padding-right: 6px;
+}
+
+.map label {
+    font-weight: bold;
+}
+
+.map ul {
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+
+#map-btn {
+    margin: 6px 0px;
+}
+
+.elementmap {
+    display: none;
+}
+{% endcss %}
