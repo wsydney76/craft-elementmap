@@ -6,13 +6,11 @@
 - Added german translations
 - Added support for asset edit page
 - Added section name to output for entries
-- Show incoming relationships for drafts
+- Added draft support
 - Show incoming relationships for all source sites
 - Display relationships in HUD
 - Fixed a bug where relations to disabled entries were not shown
-
-TODO:
-- Get info via ajax
+- Get maps via ajax
 
 ## [1.2.1] 2018-09-27
 
