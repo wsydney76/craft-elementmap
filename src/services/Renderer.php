@@ -96,6 +96,7 @@ class Renderer extends Component
         // their appropriate owner elements should be found.
         $relationships = $this->getUsableRelationElements($relationships, $siteId);
 
+
         // Retrieve the underlying elements from the relationships.
         return $this->getElementMapData($relationships, $siteId);
     }
@@ -346,6 +347,7 @@ class Renderer extends Component
             $type = key($elements);
 
             if (isset(self::ELEMENT_TYPE_MAP[$type])) {
+                /** @noinspection SlowArrayOperationsInLoopInspection */
                 $results = array_merge($results, call_user_func([$this, self::ELEMENT_TYPE_MAP[$type]], $elements[$type], $siteId));
             }
 
@@ -482,8 +484,8 @@ class Renderer extends Component
 
         $criteria = new EntryQuery('craft\elements\Entry');
         $criteria->id = $elementIds;
-        $criteria->site('*');
-        $criteria->unique();
+        $criteria->siteId($siteId);
+
         $criteria->anyStatus();
         $elements = $criteria->all();
 
@@ -559,6 +561,7 @@ class Renderer extends Component
     {
         $criteria = new TagQuery('craft\elements\Tag');
         $criteria->id = $elementIds;
+        $criteria->siteId = $siteId;
         $elements = $criteria->all();
 
         $results = [];
@@ -583,6 +586,7 @@ class Renderer extends Component
     {
         $criteria = new AssetQuery('craft\elements\Asset');
         $criteria->id = $elementIds;
+        $criteria->siteId = $siteId;
         $elements = $criteria->all();
 
         $results = [];

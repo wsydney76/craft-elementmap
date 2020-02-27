@@ -2,79 +2,59 @@
 
 <a class="btn" id="map-btn">{{ 'Relationships'|t('elementmap') }}</a>
 
-<div class="hud-wrapper hidden">
-    <div id="map-content">
-        <div class="map">
-            <label>{{ 'References to This Element'|t('elementmap') }}</label>
-            <ul>
-                {% for element in map.incoming %}
-                    <li>
-                        <a target="_blank" href="{{ element.url }}" data-id="{{ element.id }}" data-editable><span
-                                    class="icon icon-mask">{{ svg(element.icon) }}</span>{{ element.title }}</a>
-                    </li>
-                {% endfor %}
-                {% if map.incoming | length == 0 %}
-                    <li>{{ 'None'|t('elementmap') }}</li>
-                {% endif %}
-            </ul>
-        </div>
-        <div class="map">
-            <label>{{ 'References to Other Elements'|t('elementmap') }}</label>
-            <ul>
-                {% for element in map.outgoing %}
-                    <li>
-                        <a target="_blank" href="{{ element.url }}" data-id="{{ element.id }}" data-editable><span
-                                    class="icon icon-mask">{{ svg(element.icon) }}</span>{{ element.title }}</a>
-                    </li>
-                {% endfor %}
-                {% if map.outgoing | length == 0 %}
-                    <li>{{ 'None'|t('elementmap') }}</li>
-                {% endif %}
-            </ul>
-        </div>
-
-        <div>
-            <a href="javascript:window.location.reload()">{{ 'Reload page to refresh'|t('elementmap') }}</a>
-        </div>
-
-
-    </div>
-</div>
-
+{% set ajaxBaseUrl = cpUrl("elementmap/#{element.site.handle}/#{class}/") %}
 
 {% js at POS_END %}
-var $btn = $('#map-btn'),
-    $form = $('#map-content');
+    ajaxBaseUrl = '{{ ajaxBaseUrl }}';
+    elementId = {{ element.id }};
+    draftId = 0;
+{% endjs %}
+
+{% js at POS_END %}
+var $btn = $('#map-btn');
+
 $btn.on('click', function() {
-    var hud = new Garnish.HUD($btn, $form, {
-        orientations: ['top', 'bottom', 'right', 'left'],
-        hudClass: 'hud guide-hud',
-    });
-    return false;
+    $.get(ajaxBaseUrl + '/' + elementId + '?draftId=' + draftId)
+        .done(function(data) {
+            hud = new new Garnish.HUD($btn, data, {
+                orientations: ['top', 'bottom', 'right', 'left'],
+                hudClass: 'hud guide-hud',
+            });;
+        })
+        .fail(function() {
+            alert("error");
+        });
 });
+
+if (window.draftEditor) {
+    window.draftEditor.on('createDraft', function() {
+        draftId = window.draftEditor.settings.draftId;
+    });
+}
+
 {% endjs %}
 
 {% css %}
-.map svg {
+    .map svg {
     width: 20px !important;
     height: 20px !important;
     padding-right: 6px;
-}
+    }
 
-.map label {
+    .map label {
     font-weight: bold;
-}
+    }
 
-.map ul {
+    .map ul {
     padding-top: 12px;
     padding-bottom: 12px;
-}
+    }
 
-#map-btn {
+    #map-btn {
     margin: 6px 0px;
-}
+    }
 
-.elementmap {
+    .elementmap {
     display: none;
-}
+    }
 {% endcss %}
