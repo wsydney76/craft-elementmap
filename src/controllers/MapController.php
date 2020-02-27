@@ -21,11 +21,18 @@ class MapController extends Controller
 
     public function actionMap($class, $id)
     {
+        $element = null;
         switch ($class) {
             case 'entry': {
-                $element = Entry::find()->id($id)->anyStatus()->site('*')->unique()->one();
-                if (!$element) {
-                    $element = Entry::find()->drafts(true)->id($id)->anyStatus()->site('*')->unique()->one();
+                $draftId = Craft::$app->request->getParam('draftId');
+
+                if ($draftId) {
+                    $element = Entry::find()->draftId($draftId)->anyStatus()->site('*')->unique()->one();
+                } else {
+                    $element = Entry::find()->id($id)->anyStatus()->site('*')->unique()->one();
+                    if (!$element) {
+                        $element = Entry::find()->drafts(true)->id($id)->anyStatus()->site('*')->unique()->one();
+                    }
                 }
 
                 break;
@@ -56,7 +63,7 @@ class MapController extends Controller
         }
 
         if (!$element) {
-            throw  new NotFoundHttpException();
+            throw  new NotFoundHttpException("Element not found: {$class}/{$id}");
         }
 
         $plugin = ElementMap::getInstance();

@@ -2,17 +2,19 @@
 
 <a class="btn" id="map-btn">{{ 'Relationships'|t('elementmap') }}</a>
 
-{% set ajaxUrl = cpUrl("elementmap/#{class}/#{element.id}") %}
+{% set ajaxBaseUrl = cpUrl("elementmap/#{class}/") %}
 
 {% js at POS_END %}
-    url = '{{ ajaxUrl }}';
+    ajaxBaseUrl = '{{ ajaxBaseUrl }}';
+    elementId = {{ element.id }};
+    draftId = 0;
 {% endjs %}
 
 {% js at POS_END %}
 var $btn = $('#map-btn');
 
 $btn.on('click', function() {
-    $.get(url)
+    $.get(ajaxBaseUrl + '/' + elementId + '?draftId=' + draftId)
         .done(function(data) {
             hud = new new Garnish.HUD($btn, data, {
                 orientations: ['top', 'bottom', 'right', 'left'],
@@ -23,6 +25,12 @@ $btn.on('click', function() {
             alert("error");
         });
 });
+
+if (window.draftEditor) {
+    window.draftEditor.on('createDraft', function() {
+        draftId = window.draftEditor.settings.draftId;
+    });
+}
 
 {% endjs %}
 
