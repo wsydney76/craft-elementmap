@@ -159,13 +159,14 @@ class Renderer extends Component
             ],
         ];
 
-        if (!$getSources) {
+        // TODO: Check
+        /*if (!$getSources) {
             $conditions[] =  [
                 'or',
                 ['sourceSiteId' => null],
                 ['sourceSiteId' => $siteId],
             ];
-        }
+        }*/
 
         $results = (new Query())
             ->select('[[e.id]] AS id, [[e.type]] AS type')
@@ -484,7 +485,10 @@ class Renderer extends Component
 
         $criteria = new EntryQuery('craft\elements\Entry');
         $criteria->id = $elementIds;
-        $criteria->siteId($siteId);
+        $criteria->site('*');
+        $criteria->unique();
+        $criteria->preferSites([$siteId]);
+
 
         $criteria->anyStatus();
         $elements = $criteria->all();
