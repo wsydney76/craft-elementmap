@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+- Show image thumbnail
+- Show image volume name
+- Order relationships by element type and entry section/asset volume name
+- Links do not open in new tab by default
+- Add Relationship button to Globalsets
+
 ## [1.3.0] 2020-02-37
 
 - Forked under wsydney76\elementmap
@@ -7,7 +13,7 @@
 - Added support for asset edit page
 - Added section name to output for entries
 - Added draft support
-- Show incoming relationships for all source sites
+- Show relationships for all sites
 - Display relationships in HUD
 - Fixed a bug where relations to disabled entries were not shown
 - Get maps via ajax

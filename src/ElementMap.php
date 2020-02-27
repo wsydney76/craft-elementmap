@@ -51,6 +51,7 @@ class ElementMap extends Plugin
         Craft::$app->getView()->hook('cp.assets.edit.meta', [$this, 'renderAssetElementMap']);
         Craft::$app->getView()->hook('cp.categories.edit.meta', [$this, 'renderCategoryElementMap']);
         Craft::$app->getView()->hook('cp.users.edit.meta', [$this, 'renderUserElementMap']);
+        Craft::$app->getView()->hook('cp.globals.edit.content', [$this, 'renderGlobalsElementMap']);
         Craft::$app->getView()->hook('cp.commerce.product.edit.details', [$this, 'renderProductElementMap']);
 
         // Allow some elements to have map data shown in their overview tables.
@@ -153,6 +154,11 @@ class ElementMap extends Plugin
     public function renderUserElementMap(array &$context)
     {
         return $this->renderMap($context['user'], 'user');
+    }
+
+    public function renderGlobalsElementMap(array &$context)
+    {
+        return $this->renderMap($context['globalSet'], 'globalset');
     }
 
     /**

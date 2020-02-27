@@ -11,7 +11,6 @@ use Craft;
 use craft\commerce\elements\db\ProductQuery;
 use craft\commerce\elements\db\VariantQuery;
 use craft\db\Query;
-use craft\elements\Asset;
 use craft\elements\db\AssetQuery;
 use craft\elements\db\CategoryQuery;
 use craft\elements\db\EntryQuery;
@@ -35,6 +34,16 @@ class Renderer extends Component
         'craft\commerce\elements\Variant' => 'getVariantElements',
     ];
 
+    const ELEMENT_TYPE_SORT_MAP = [
+        'craft\elements\Entry' => '01',
+        'craft\elements\GlobalSet' => '99',
+        'craft\elements\Category' => '10',
+        'craft\elements\Tag' => '15',
+        'craft\elements\Asset' => '10',
+        'craft\elements\User' => '20',
+        'craft\commerce\elements\Product' => '30',
+        'craft\commerce\elements\Variant' => '35',
+    ];
 
     /**
      * Generates a data structure containing elements that reference the given
@@ -77,12 +86,9 @@ class Renderer extends Component
             $targets = [$element->id];
         }
 
-
-
         // Assemble a set of elements that should be used as the targets.
 
-		// Starting with the element itself.
-
+        // Starting with the element itself.
 
         // Any variants within the element, as the variant and element share the
         // same editor pages (and can be referenced individually)
@@ -95,7 +101,6 @@ class Renderer extends Component
         // blocks. Before retrieving proper elements and generating the map,
         // their appropriate owner elements should be found.
         $relationships = $this->getUsableRelationElements($relationships, $siteId);
-
 
         // Retrieve the underlying elements from the relationships.
         return $this->getElementMapData($relationships, $siteId);
@@ -338,7 +343,6 @@ class Renderer extends Component
     private function getElementMapData(array $elements, int $siteId)
     {
 
-
         $elements = $this->groupByType($elements);
         $results = [];
 
@@ -356,7 +360,7 @@ class Renderer extends Component
         }
 
         usort($results, function($a, $b) {
-            return strcmp($a['title'], $b['title']);
+            return strcmp($a['sort'] . $a['title'], $b['sort'] . $b['title']);
         });
 
         return $results;
@@ -482,26 +486,27 @@ class Renderer extends Component
     private function getEntryElements($elementIds, $siteId)
     {
 
-
         $criteria = new EntryQuery('craft\elements\Entry');
         $criteria->id = $elementIds;
         $criteria->site('*');
         $criteria->unique();
         $criteria->preferSites([$siteId]);
 
-
         $criteria->anyStatus();
         $elements = $criteria->all();
 
         $results = [];
         foreach ($elements as $element) {
+            $sectionName = Craft::t('site', $element->section->name);
             $results[] = [
                 'id' => $element->id,
                 'icon' => '@vendor/craftcms/cms/src/icons/newspaper.svg',
-                'title' => $element->title . ' (' . Craft::t('site', $element->section->name) . ')',
+                'title' => $element->title . ' (' . $sectionName . ')',
                 'url' => $element->cpEditUrl,
+                'sort' => self::ELEMENT_TYPE_SORT_MAP[get_class($element)] . $sectionName
             ];
         }
+
         return $results;
     }
 
@@ -524,6 +529,7 @@ class Renderer extends Component
                 'icon' => '@vendor/craftcms/cms/src/icons/globe.svg',
                 'title' => $element->name,
                 'url' => $element->cpEditUrl,
+                'sort' => self::ELEMENT_TYPE_SORT_MAP[get_class($element)]
             ];
         }
         return $results;
@@ -550,6 +556,7 @@ class Renderer extends Component
                 'icon' => '@vendor/craftcms/cms/src/icons/folder-open.svg',
                 'title' => $element->title,
                 'url' => $element->cpEditUrl,
+                'sort' => self::ELEMENT_TYPE_SORT_MAP[get_class($element)]
             ];
         }
         return $results;
@@ -575,6 +582,7 @@ class Renderer extends Component
                 'icon' => '@vendor/craftcms/cms/src/icons/tags.svg',
                 'title' => $element->title,
                 'url' => '/' . Craft::$app->getConfig()->getGeneral()->cpTrigger . '/settings/tags/' . $element->groupId,
+                'sort' => self::ELEMENT_TYPE_SORT_MAP[get_class($element)]
             ];
         }
         return $results;
@@ -593,13 +601,17 @@ class Renderer extends Component
         $criteria->siteId = $siteId;
         $elements = $criteria->all();
 
+        $imageBaseUrl = '/index.php?p=' . Craft::$app->config->general->cpTrigger . '/actions/assets/thumb&width=32&height=32&uid=';
+
         $results = [];
         foreach ($elements as $element) {
+            $volumeName = $element->volume->name;
             $results[] = [
                 'id' => $element->id,
-                'icon' => '@vendor/craftcms/cms/src/icons/photo.svg',
-                'title' => $element->title,
+                'image' => $imageBaseUrl . $element->uid,
+                'title' => $element->title . ' (' . $volumeName . ')',
                 'url' => $element->cpEditUrl,
+                'sort' => self::ELEMENT_TYPE_SORT_MAP[get_class($element)] .$volumeName
             ];
         }
         return $results;
@@ -624,6 +636,7 @@ class Renderer extends Component
                 'icon' => '@vendor/craftcms/cms/src/icons/user.svg',
                 'title' => $element->name,
                 'url' => $element->cpEditUrl,
+                'sort' => self::ELEMENT_TYPE_SORT_MAP[get_class($element)]
             ];
         }
         return $results;
@@ -649,6 +662,7 @@ class Renderer extends Component
                 'icon' => '@vendor/craftcms/commerce/src/icon-mask.svg',
                 'title' => $element->title,
                 'url' => $element->cpEditUrl,
+                'sort' => self::ELEMENT_TYPE_SORT_MAP[get_class($element)]
             ];
         }
         return $results;
@@ -674,6 +688,7 @@ class Renderer extends Component
                 'icon' => '@vendor/craftcms/commerce/src/icon-mask.svg',
                 'title' => $element->product->title . ': ' . $element->title,
                 'url' => $element->cpEditUrl,
+                'sort' => self::ELEMENT_TYPE_SORT_MAP[get_class($element)]
             ];
         }
         return $results;

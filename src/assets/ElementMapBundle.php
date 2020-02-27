@@ -23,6 +23,10 @@ class ElementMapBundle extends AssetBundle
 			'elementmap.css',
 		];
 
+		$this->js = [
+		  'elementmap.js'
+        ];
+
 		parent::init();
 	}
 }
