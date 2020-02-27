@@ -2,52 +2,51 @@
 
 <a class="btn" id="map-btn">{{ 'Relationships'|t('elementmap') }}</a>
 
-<div class="hud-wrapper hidden">
-    <div id="map-content">
-        {% include 'elementmap/_map_content' %}
-
-        <div>
-            <a href="javascript:window.location.reload()">{{ 'Reload page to refresh'|t('elementmap') }}</a>
-        </div>
-
-
-    </div>
-</div>
-
+{% set ajaxUrl = cpUrl("elementmap/#{class}/#{element.id}") %}
 
 {% js at POS_END %}
-var $btn = $('#map-btn'),
-    $form = $('#map-content');
+    url = '{{ ajaxUrl }}';
+{% endjs %}
+
+{% js at POS_END %}
+var $btn = $('#map-btn');
+
 $btn.on('click', function() {
-    var hud = new Garnish.HUD($btn, $form, {
-        orientations: ['top', 'bottom', 'right', 'left'],
-        hudClass: 'hud guide-hud',
-    });
-    return false;
+    $.get(url)
+        .done(function(data) {
+            hud = new new Garnish.HUD($btn, data, {
+                orientations: ['top', 'bottom', 'right', 'left'],
+                hudClass: 'hud guide-hud',
+            });;
+        })
+        .fail(function() {
+            alert("error");
+        });
 });
+
 {% endjs %}
 
 {% css %}
-.map svg {
+    .map svg {
     width: 20px !important;
     height: 20px !important;
     padding-right: 6px;
-}
+    }
 
-.map label {
+    .map label {
     font-weight: bold;
-}
+    }
 
-.map ul {
+    .map ul {
     padding-top: 12px;
     padding-bottom: 12px;
-}
+    }
 
-#map-btn {
+    #map-btn {
     margin: 6px 0px;
-}
+    }
 
-.elementmap {
+    .elementmap {
     display: none;
-}
+    }
 {% endcss %}

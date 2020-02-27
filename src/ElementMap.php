@@ -51,7 +51,7 @@ class ElementMap extends Plugin
         Craft::$app->getView()->hook('cp.assets.edit.meta', [$this, 'renderAssetElementMap']);
 		Craft::$app->getView()->hook('cp.categories.edit.meta', [$this, 'renderCategoryElementMap']);
 		Craft::$app->getView()->hook('cp.users.edit.meta', [$this, 'renderUserElementMap']);
-		Craft::$app->getView()->hook('cp.commerce.product.edit.meta', [$this, 'renderProductElementMap']);
+		Craft::$app->getView()->hook('cp.commerce.product.edit.details', [$this, 'renderProductElementMap']);
 
 		// Allow some elements to have map data shown in their overview tables.
 		Event::on(Asset::class, Element::EVENT_REGISTER_TABLE_ATTRIBUTES, [$this, 'registerTableAttributes']);
@@ -112,7 +112,7 @@ class ElementMap extends Plugin
 	public function renderEntryElementMap(array &$context)
 	{
 		$map = $this->renderer->getElementMap($context['entry'], $context['site']['id']);
-		return $this->renderMap($map);
+		return $this->renderMap($map, $context['entry'], 'entry');
 	}
 
     /**
@@ -122,7 +122,7 @@ class ElementMap extends Plugin
     public function renderAssetElementMap(array &$context)
     {
         $map = $this->renderer->getElementMap($context['element'], $context['element']['siteId']);
-        return $this->renderMap($map);
+        return $this->renderMap($map, $context['element'], 'asset');
     }
 
 	/**
@@ -132,7 +132,7 @@ class ElementMap extends Plugin
 	public function renderCategoryElementMap(array &$context)
 	{
 		$map = $this->renderer->getElementMap($context['category'], $context['site']['id']);
-		return $this->renderMap($map);
+		return $this->renderMap($map, $context['category'], 'category');
 	}
 
 	/**
@@ -142,7 +142,7 @@ class ElementMap extends Plugin
 	public function renderUserElementMap(array &$context)
 	{
 		$map = $this->renderer->getElementMap($context['user'], Craft::$app->getSites()->getPrimarySite()->id);
-		return $this->renderMap($map);
+		return $this->renderMap($map, $context['user'], 'user');
 	}
 
 	/**
@@ -152,17 +152,17 @@ class ElementMap extends Plugin
 	public function renderProductElementMap(array &$context)
 	{
 		$map = $this->renderer->getElementMap($context['product'], $context['site']['id']);
-		return $this->renderMap($map);
+		return $this->renderMap($map, $context['product'], 'product');
 	}
 
 	/**
 	 * Renders an underlying incoming/outgoing element map.
 	 * @param array $map The map data to render.
 	 */
-	public function renderMap($map)
+	public function renderMap($map, $element, $class)
 	{
 		if ($map) {
-			return Craft::$app->view->renderTemplate('elementmap/_map', ['map' => $map]);
+			return Craft::$app->view->renderTemplate('elementmap/_map', ['map' => $map, 'element' => $element, 'class' => $class]);
 		}
 	}
 }
