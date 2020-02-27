@@ -19,26 +19,27 @@ class MapController extends Controller
     // Protected Properties
     // =========================================================================
 
-    public function actionMap($class, $id)
+    public function actionMap($site, $class, $id)
     {
+
         $element = null;
         switch ($class) {
             case 'entry': {
                 $draftId = Craft::$app->request->getParam('draftId');
 
                 if ($draftId) {
-                    $element = Entry::find()->draftId($draftId)->anyStatus()->site('*')->unique()->one();
+                    $element = Entry::find()->draftId($draftId)->anyStatus()->site('*')->preferSites([$site])->unique()->one();
                 } else {
-                    $element = Entry::find()->id($id)->anyStatus()->site('*')->unique()->one();
+                    $element = Entry::find()->id($id)->anyStatus()->site('*')->preferSites([$site])->unique()->one();
                     if (!$element) {
-                        $element = Entry::find()->drafts(true)->id($id)->anyStatus()->site('*')->unique()->one();
+                        $element = Entry::find()->drafts(true)->id($id)->anyStatus()->site('*')->preferSites([$site])->unique()->one();
                     }
                 }
 
                 break;
             }
             case 'asset': {
-                $element = Asset::find()->id($id)->one();
+                $element = Asset::find()->site($site)->id($id)->one();
                 break;
             }
 
@@ -68,6 +69,8 @@ class MapController extends Controller
 
         $plugin = ElementMap::getInstance();
         $map = $plugin->renderer->getElementMap($element, $element->siteId);
+
+
         return Craft::$app->view->renderTemplate('elementmap/_map_content', ['map' => $map]);;
     }
 
