@@ -2,6 +2,7 @@
 
 namespace wsydney76\elementmap\controllers;
 
+use Craft;
 use craft\elements\Entry;
 use craft\web\Controller;
 use wsydney76\elementmap\ElementMap;
@@ -30,6 +31,6 @@ class MapController extends Controller
         }
         $plugin = ElementMap::getInstance();
         $map = $plugin->renderer->getElementMap($entry, $entry->siteId);
-        return $plugin->renderMap($map);
+       return Craft::$app->view->renderTemplate('elementmap/_map_content', ['map' => $map]);;
     }
 }

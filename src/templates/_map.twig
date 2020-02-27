@@ -4,34 +4,7 @@
 
 <div class="hud-wrapper hidden">
     <div id="map-content">
-        <div class="map">
-            <label>{{ 'References to This Element'|t('elementmap') }}</label>
-            <ul>
-                {% for element in map.incoming %}
-                    <li>
-                        <a target="_blank" href="{{ element.url }}" data-id="{{ element.id }}" data-editable><span
-                                    class="icon icon-mask">{{ svg(element.icon) }}</span>{{ element.title }}</a>
-                    </li>
-                {% endfor %}
-                {% if map.incoming | length == 0 %}
-                    <li>{{ 'None'|t('elementmap') }}</li>
-                {% endif %}
-            </ul>
-        </div>
-        <div class="map">
-            <label>{{ 'References to Other Elements'|t('elementmap') }}</label>
-            <ul>
-                {% for element in map.outgoing %}
-                    <li>
-                        <a target="_blank" href="{{ element.url }}" data-id="{{ element.id }}" data-editable><span
-                                    class="icon icon-mask">{{ svg(element.icon) }}</span>{{ element.title }}</a>
-                    </li>
-                {% endfor %}
-                {% if map.outgoing | length == 0 %}
-                    <li>{{ 'None'|t('elementmap') }}</li>
-                {% endif %}
-            </ul>
-        </div>
+        {% include 'elementmap/_map_content' %}
 
         <div>
             <a href="javascript:window.location.reload()">{{ 'Reload page to refresh'|t('elementmap') }}</a>
