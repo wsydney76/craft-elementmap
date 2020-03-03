@@ -6,6 +6,7 @@ use Craft;
 use craft\elements\Asset;
 use craft\elements\Category;
 use craft\elements\Entry;
+use craft\elements\GlobalSet;
 use craft\elements\Tag;
 use craft\elements\User;
 use craft\commerce\elements\Product;
@@ -34,6 +35,9 @@ class MapController extends Controller
                     if (!$element) {
                         $element = Entry::find()->drafts(true)->id($id)->anyStatus()->site('*')->preferSites([$site])->unique()->one();
                     }
+                    if (!$element) {
+                        $element = Entry::find()->revisions(true)->id($id)->anyStatus()->site('*')->preferSites([$site])->unique()->one();
+                    }
                 }
 
                 break;
@@ -58,8 +62,14 @@ class MapController extends Controller
                 break;
             }
 
+            case 'globalset': {
+                $element = GlobalSet::find()->id($id)->one();
+                break;
+            }
+
             case 'product': {
                 $element = Product::find()->id($id)->one();
+                break;
             }
         }
 
