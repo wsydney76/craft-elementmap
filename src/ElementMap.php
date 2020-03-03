@@ -19,7 +19,13 @@ use craft\events\RegisterElementTableAttributesEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\events\SetElementTableAttributeHtmlEvent;
 use craft\web\UrlManager;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
+use wsydney76\elementmap\models\Settings;
+use wsydney76\elementmap\services\Renderer;
 use yii\base\Event;
+use yii\base\Exception;
 
 /**
  * The main Craft plugin class.
@@ -36,7 +42,7 @@ class ElementMap extends Plugin
         parent::init();
 
         $this->setComponents([
-            'renderer' => \wsydney76\elementmap\services\Renderer::class,
+            'renderer' => Renderer::class,
         ]);
 
         // Set routes
@@ -65,6 +71,11 @@ class ElementMap extends Plugin
         Event::on(User::class, Element::EVENT_SET_TABLE_ATTRIBUTE_HTML, [$this, 'getTableAttributeHtml']);
         Event::on(Product::class, Element::EVENT_REGISTER_TABLE_ATTRIBUTES, [$this, 'registerTableAttributes']);
         Event::on(Product::class, Element::EVENT_SET_TABLE_ATTRIBUTE_HTML, [$this, 'getTableAttributeHtml']);
+    }
+
+    protected function createSettingsModel()
+    {
+        return new Settings();
     }
 
     /**
@@ -110,6 +121,11 @@ class ElementMap extends Plugin
      * Renders the element map for an entry within the entry editor, given the current Twig context.
      *
      * @param array $context The incoming Twig context.
+     * @return string
+     * @throws Exception
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
      */
     public function renderEntryElementMap(array &$context)
     {
@@ -119,7 +135,13 @@ class ElementMap extends Plugin
     /**
      * Renders an underlying incoming/outgoing element map.
      *
-     * @param array $map The map data to render.
+     * @param $element
+     * @param $class
+     * @return string
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     * @throws Exception
      */
     public function renderMap($element, $class)
     {
@@ -130,6 +152,11 @@ class ElementMap extends Plugin
      * Renders the element map for an entry within the entry editor, given the current Twig context.
      *
      * @param array $context The incoming Twig context.
+     * @return string
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     * @throws Exception
      */
     public function renderAssetElementMap(array &$context)
     {
@@ -140,6 +167,11 @@ class ElementMap extends Plugin
      * Renders the element map for a category within the category editor, given the current Twig context.
      *
      * @param array $context The incoming Twig context.
+     * @return string
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     * @throws Exception
      */
     public function renderCategoryElementMap(array &$context)
     {
@@ -150,12 +182,25 @@ class ElementMap extends Plugin
      * Renders the element map for a user within the user editor, given the current Twig context.
      *
      * @param array $context The incoming Twig context.
+     * @return string
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     * @throws Exception
      */
     public function renderUserElementMap(array &$context)
     {
         return $this->renderMap($context['user'], 'user');
     }
 
+    /**
+     * @param array $context
+     * @return string
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     * @throws Exception
+     */
     public function renderGlobalsElementMap(array &$context)
     {
         return $this->renderMap($context['globalSet'], 'globalset');
@@ -165,6 +210,11 @@ class ElementMap extends Plugin
      * Renders the element map for a product within the product editor, given the current Twig context.
      *
      * @param array $context The incoming Twig context.
+     * @return string
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     * @throws Exception
      */
     public function renderProductElementMap(array &$context)
     {

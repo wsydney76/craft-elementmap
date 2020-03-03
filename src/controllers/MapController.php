@@ -35,6 +35,9 @@ class MapController extends Controller
                     if (!$element) {
                         $element = Entry::find()->drafts(true)->id($id)->anyStatus()->site('*')->preferSites([$site])->unique()->one();
                     }
+                    if (!$element) {
+                        $element = Entry::find()->revisions(true)->id($id)->anyStatus()->site('*')->preferSites([$site])->unique()->one();
+                    }
                 }
 
                 break;
