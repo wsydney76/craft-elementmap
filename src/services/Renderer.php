@@ -11,7 +11,6 @@ use Craft;
 use craft\commerce\elements\db\ProductQuery;
 use craft\commerce\elements\db\VariantQuery;
 use craft\db\Query;
-use craft\elements\Asset;
 use craft\elements\db\AssetQuery;
 use craft\elements\db\CategoryQuery;
 use craft\elements\db\EntryQuery;
@@ -19,6 +18,8 @@ use craft\elements\db\GlobalSetQuery;
 use craft\elements\db\TagQuery;
 use craft\elements\db\UserQuery;
 use craft\elements\Entry;
+use craft\elements\MatrixBlock;
+use wsydney76\elementmap\ElementMap;
 use yii\base\Component;
 
 class Renderer extends Component
@@ -35,6 +36,16 @@ class Renderer extends Component
         'craft\commerce\elements\Variant' => 'getVariantElements',
     ];
 
+    const ELEMENT_TYPE_SORT_MAP = [
+        'craft\elements\Entry' => '01',
+        'craft\elements\GlobalSet' => '99',
+        'craft\elements\Category' => '10',
+        'craft\elements\Tag' => '15',
+        'craft\elements\Asset' => '10',
+        'craft\elements\User' => '20',
+        'craft\commerce\elements\Product' => '30',
+        'craft\commerce\elements\Variant' => '35',
+    ];
 
     /**
      * Generates a data structure containing elements that reference the given
@@ -44,6 +55,7 @@ class Renderer extends Component
      * information about.
      * @param int $siteId The ID of the site context that information should
      * be gathered within.
+     * @return array|null
      */
     public function getElementMap($element, int $siteId)
     {
@@ -52,50 +64,54 @@ class Renderer extends Component
         }
 
         return [
-            'incoming' => $this->getIncomingElements($element, $siteId),
             'outgoing' => $this->getOutgoingElements($element, $siteId),
+            'incoming' => $this->getIncomingElements($element, $siteId),
         ];
     }
 
     /**
-     * Retrieves a list of elements referencing the given element.
+     * Retrieves a list of elements that the given element references.
      *
      * @param int $elementId The ID of the element to retrieve map
      * information about.
      * @param int $siteId The ID of the site context that information should
      * be gathered within.
      */
-    public function getIncomingElements($element, int $siteId)
+    public function getOutgoingElements($element, int $siteId)
     {
         if (!$element) { // No element, no related elements.
             return null;
         }
 
-        if ($element instanceof Entry) {
-            $targets = Entry::find()->id($element->sourceId)->site('*')->ids();
-        } else {
-            $targets = [$element->id];
-        }
+        // Assemble a set of elements that should be used as the sources.
 
-
-
-        // Assemble a set of elements that should be used as the targets.
-
-		// Starting with the element itself.
-
+        // Starting with the element itself.
+        $sources = [$element->id];
 
         // Any variants within the element, as the variant and element share the
-        // same editor pages (and can be referenced individually)
-        $targets = array_merge($targets, $this->getVariantIdsByProducts($targets));
+        // same editor pages.
+        $sources = array_merge($sources, $this->getVariantIdsByProducts($sources));
 
-        // Find all elements that have any of these elements as targets.
-        $relationships = $this->getRelationships($targets, $siteId, true);
+        // Any matrix blocks, because they contain fields that may reference
+        // other elements
+        $sources = array_merge($sources, $this->getMatrixBlockIdsByOwners($sources));
 
-        // Incoming connections may be coming from elements such as matrix
-        // blocks. Before retrieving proper elements and generating the map,
-        // their appropriate owner elements should be found.
+        // Any super table blocks, for the same reason as matrix blocks, and
+        // because they may themselves be contained within the matrix blocks.
+        $sources = array_merge($sources, $this->getSuperTableBlockIdsByOwners($sources));
+
+        // Any matrix blocks, again, in the case of any matrix blocks being
+        // contained within the super table blocks. This is thankfully as
+        // far as the recursion can go.
+        $sources = array_merge($sources, $this->getMatrixBlockIdsByOwners($sources));
+
+        // Find all elements that have any of these elements as sources.
+        $relationships = $this->getRelationships($sources, $siteId, false);
+
+        // Outgoing connections may be going to elements such as variants.
+        // Before retrieving proper elements and generating the map, their
+        // appropriate owner elements should be found.
         $relationships = $this->getUsableRelationElements($relationships, $siteId);
-
 
         // Retrieve the underlying elements from the relationships.
         return $this->getElementMapData($relationships, $siteId);
@@ -122,6 +138,45 @@ class Renderer extends Component
         return (new Query())
             ->select('id')
             ->from('{{%commerce_variants}}')
+            ->where($conditions)
+            ->column();
+    }
+
+    /**
+     * Retrieves matrix blocks that are owned by the provided elements.
+     *
+     * @param $elementId The element(s) to retrieve blocks for.
+     * @return array An array of elements, with their ID `id` and element type
+     * `type`.
+     */
+    private function getMatrixBlockIdsByOwners($elementIds)
+    {
+
+        return MatrixBlock::find()
+            ->ownerId($elementIds)
+            ->ids();
+    }
+
+    /**
+     * Retrieves super table blocks that are owned by the provided elements.
+     *
+     * @param $elementId The element(s) to retrieve blocks for.
+     * @return array An array of elements, with their ID `id` and element type
+     * `type`.
+     */
+    private function getSuperTableBlockIdsByOwners($elementIds)
+    {
+        // Make sure super table is installed.
+        if (!Craft::$app->getPlugins()->getPlugin('super-table')) {
+            return [];
+        }
+
+        $conditions = [
+            'ownerId' => $elementIds,
+        ];
+        return (new Query())
+            ->select('id')
+            ->from('{{%supertableblocks}}')
             ->where($conditions)
             ->column();
     }
@@ -159,20 +214,25 @@ class Renderer extends Component
             ],
         ];
 
-        if (!$getSources) {
-            $conditions[] =  [
-                'or',
-                ['sourceSiteId' => null],
-                ['sourceSiteId' => $siteId],
-            ];
+        // TODO: Check
+
+        if (!ElementMap::getInstance()->getSettings()->showAllSites) {
+            if (!$getSources) {
+                $conditions[] = [
+                    'or',
+                    ['sourceSiteId' => null],
+                    ['sourceSiteId' => $siteId],
+                ];
+            }
         }
 
-        $results = (new Query())
+        $query = (new Query())
             ->select('[[e.id]] AS id, [[e.type]] AS type')
             ->from('{{%relations}} r')
             ->leftJoin('{{%elements}} e', '[[r.' . $tocol . ']] = [[e.id]]')
-            ->where($conditions)
-            ->all();
+            ->where($conditions);
+
+        $results = $query->all();
 
         $results = $this->groupByType($results);
 
@@ -337,7 +397,6 @@ class Renderer extends Component
     private function getElementMapData(array $elements, int $siteId)
     {
 
-
         $elements = $this->groupByType($elements);
         $results = [];
 
@@ -355,101 +414,51 @@ class Renderer extends Component
         }
 
         usort($results, function($a, $b) {
-            return strcmp($a['title'], $b['title']);
+            return strcmp($a['sort'] . $a['title'], $b['sort'] . $b['title']);
         });
 
         return $results;
     }
 
     /**
-     * Retrieves a list of elements that the given element references.
+     * Retrieves a list of elements referencing the given element.
      *
      * @param int $elementId The ID of the element to retrieve map
      * information about.
      * @param int $siteId The ID of the site context that information should
      * be gathered within.
+     * @return array|null
      */
-    public function getOutgoingElements($element, int $siteId)
+    public function getIncomingElements($element, int $siteId)
     {
         if (!$element) { // No element, no related elements.
             return null;
         }
 
-        // Assemble a set of elements that should be used as the sources.
+        if ($element instanceof Entry) {
+            $targets = Entry::find()->id($element->sourceId)->site('*')->ids();
+        } else {
+            $targets = [$element->id];
+        }
+
+        // Assemble a set of elements that should be used as the targets.
 
         // Starting with the element itself.
-        $sources = [$element->id];
 
         // Any variants within the element, as the variant and element share the
-        // same editor pages.
-        $sources = array_merge($sources, $this->getVariantIdsByProducts($sources));
+        // same editor pages (and can be referenced individually)
+        $targets = array_merge($targets, $this->getVariantIdsByProducts($targets));
 
-        // Any matrix blocks, because they contain fields that may reference
-        // other elements
-        $sources = array_merge($sources, $this->getMatrixBlockIdsByOwners($sources));
+        // Find all elements that have any of these elements as targets.
+        $relationships = $this->getRelationships($targets, $siteId, true);
 
-        // Any super table blocks, for the same reason as matrix blocks, and
-        // because they may themselves be contained within the matrix blocks.
-        $sources = array_merge($sources, $this->getSuperTableBlockIdsByOwners($sources));
-
-        // Any matrix blocks, again, in the case of any matrix blocks being
-        // contained within the super table blocks. This is thankfully as
-        // far as the recursion can go.
-        $sources = array_merge($sources, $this->getMatrixBlockIdsByOwners($sources));
-
-        // Find all elements that have any of these elements as sources.
-        $relationships = $this->getRelationships($sources, $siteId, false);
-
-        // Outgoing connections may be going to elements such as variants.
-        // Before retrieving proper elements and generating the map, their
-        // appropriate owner elements should be found.
+        // Incoming connections may be coming from elements such as matrix
+        // blocks. Before retrieving proper elements and generating the map,
+        // their appropriate owner elements should be found.
         $relationships = $this->getUsableRelationElements($relationships, $siteId);
 
         // Retrieve the underlying elements from the relationships.
         return $this->getElementMapData($relationships, $siteId);
-    }
-
-    /**
-     * Retrieves matrix blocks that are owned by the provided elements.
-     *
-     * @param $elementId The element(s) to retrieve blocks for.
-     * @return array An array of elements, with their ID `id` and element type
-     * `type`.
-     */
-    private function getMatrixBlockIdsByOwners($elementIds)
-    {
-        $conditions = [
-            'ownerId' => $elementIds,
-        ];
-        return (new Query())
-            ->select('id')
-            ->from('{{%matrixblocks}}')
-            ->where($conditions)
-            ->column();
-    }
-
-    /**
-     * Retrieves super table blocks that are owned by the provided elements.
-     *
-     * @param $elementId The element(s) to retrieve blocks for.
-     * @return array An array of elements, with their ID `id` and element type
-     * `type`.
-     */
-    private function getSuperTableBlockIdsByOwners($elementIds)
-    {
-        // Make sure super table is installed.
-        if (!Craft::$app->getPlugins()->getPlugin('super-table')) {
-            return [];
-        }
-
-        $conditions = [
-            'ownerId' => $elementIds,
-        ];
-        return (new Query())
-            ->select('id')
-            ->from('{{%supertableblocks}}')
-            ->where($conditions)
-            ->column();
     }
 
     /**
@@ -481,23 +490,27 @@ class Renderer extends Component
     private function getEntryElements($elementIds, $siteId)
     {
 
-
         $criteria = new EntryQuery('craft\elements\Entry');
         $criteria->id = $elementIds;
-        $criteria->siteId($siteId);
+        $criteria->site('*');
+        $criteria->unique();
+        $criteria->preferSites([$siteId]);
 
         $criteria->anyStatus();
         $elements = $criteria->all();
 
         $results = [];
         foreach ($elements as $element) {
+            $sectionName = Craft::t('site', $element->section->name);
             $results[] = [
                 'id' => $element->id,
                 'icon' => '@vendor/craftcms/cms/src/icons/newspaper.svg',
-                'title' => $element->title . ' (' . Craft::t('site', $element->section->name) . ')',
+                'title' => $element->title . ' (' . $sectionName . ')',
                 'url' => $element->cpEditUrl,
+                'sort' => self::ELEMENT_TYPE_SORT_MAP[get_class($element)] . $sectionName
             ];
         }
+
         return $results;
     }
 
@@ -520,6 +533,7 @@ class Renderer extends Component
                 'icon' => '@vendor/craftcms/cms/src/icons/globe.svg',
                 'title' => $element->name,
                 'url' => $element->cpEditUrl,
+                'sort' => self::ELEMENT_TYPE_SORT_MAP[get_class($element)]
             ];
         }
         return $results;
@@ -546,6 +560,7 @@ class Renderer extends Component
                 'icon' => '@vendor/craftcms/cms/src/icons/folder-open.svg',
                 'title' => $element->title,
                 'url' => $element->cpEditUrl,
+                'sort' => self::ELEMENT_TYPE_SORT_MAP[get_class($element)]
             ];
         }
         return $results;
@@ -571,6 +586,7 @@ class Renderer extends Component
                 'icon' => '@vendor/craftcms/cms/src/icons/tags.svg',
                 'title' => $element->title,
                 'url' => '/' . Craft::$app->getConfig()->getGeneral()->cpTrigger . '/settings/tags/' . $element->groupId,
+                'sort' => self::ELEMENT_TYPE_SORT_MAP[get_class($element)]
             ];
         }
         return $results;
@@ -589,13 +605,17 @@ class Renderer extends Component
         $criteria->siteId = $siteId;
         $elements = $criteria->all();
 
+        $imageBaseUrl = '/index.php?p=' . Craft::$app->config->general->cpTrigger . '/actions/assets/thumb&width=32&height=32&uid=';
+
         $results = [];
         foreach ($elements as $element) {
+            $volumeName = $element->volume->name;
             $results[] = [
                 'id' => $element->id,
-                'icon' => '@vendor/craftcms/cms/src/icons/photo.svg',
-                'title' => $element->title,
+                'image' => $imageBaseUrl . $element->uid,
+                'title' => $element->title . ' (' . $volumeName . ')',
                 'url' => $element->cpEditUrl,
+                'sort' => self::ELEMENT_TYPE_SORT_MAP[get_class($element)] . $volumeName
             ];
         }
         return $results;
@@ -620,6 +640,7 @@ class Renderer extends Component
                 'icon' => '@vendor/craftcms/cms/src/icons/user.svg',
                 'title' => $element->name,
                 'url' => $element->cpEditUrl,
+                'sort' => self::ELEMENT_TYPE_SORT_MAP[get_class($element)]
             ];
         }
         return $results;
@@ -645,6 +666,7 @@ class Renderer extends Component
                 'icon' => '@vendor/craftcms/commerce/src/icon-mask.svg',
                 'title' => $element->title,
                 'url' => $element->cpEditUrl,
+                'sort' => self::ELEMENT_TYPE_SORT_MAP[get_class($element)]
             ];
         }
         return $results;
@@ -670,6 +692,7 @@ class Renderer extends Component
                 'icon' => '@vendor/craftcms/commerce/src/icon-mask.svg',
                 'title' => $element->product->title . ': ' . $element->title,
                 'url' => $element->cpEditUrl,
+                'sort' => self::ELEMENT_TYPE_SORT_MAP[get_class($element)]
             ];
         }
         return $results;
