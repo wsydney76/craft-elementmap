@@ -39,6 +39,7 @@ class ElementMap extends Plugin
     public function init()
     {
 
+
         parent::init();
 
         $this->setComponents([
@@ -49,7 +50,7 @@ class ElementMap extends Plugin
         Event::on(
             UrlManager::class,
             UrlManager::EVENT_REGISTER_CP_URL_RULES, function(RegisterUrlRulesEvent $event) {
-            $event->rules['elementmap/<site:.*>/<class:.*>/<id:[\d]+>'] = 'elementmap/map/map';
+            $event->rules['elementmap-getrelations/<site:.*>/<class:.*>/<id:[\d]+>'] = 'elementmap/map/map';
         });
 
         // Render element maps within the appropriate template hooks.
@@ -71,6 +72,8 @@ class ElementMap extends Plugin
         Event::on(User::class, Element::EVENT_SET_TABLE_ATTRIBUTE_HTML, [$this, 'getTableAttributeHtml']);
         Event::on(Product::class, Element::EVENT_REGISTER_TABLE_ATTRIBUTES, [$this, 'registerTableAttributes']);
         Event::on(Product::class, Element::EVENT_SET_TABLE_ATTRIBUTE_HTML, [$this, 'getTableAttributeHtml']);
+
+
     }
 
     protected function createSettingsModel()
