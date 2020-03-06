@@ -2,7 +2,7 @@
 
 <a class="btn" id="map-btn">{{ 'Relationships'|t('elementmap') }}</a>
 
-{% set ajaxBaseUrl = cpUrl("elementmap/#{element.site.handle}/#{class}/") %}
+{% set ajaxBaseUrl = cpUrl("elementmap-getrelations/#{element.site.handle}/#{class}/") %}
 
 {% js at POS_END %}
     ajaxBaseUrl = '{{ ajaxBaseUrl }}';
