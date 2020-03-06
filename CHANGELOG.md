@@ -1,3 +1,7 @@
+## [1.4.2] 2020-03-06
+
+- Fixed a bug where fetching relationships via ajax could end up in a 403 error.
+
 ## [1.4.0] 2020-03-03
 
 - Show image thumbnail
