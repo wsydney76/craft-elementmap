@@ -56,7 +56,7 @@ class ElementMap extends Plugin
         // Render element maps within the appropriate template hooks.
         Craft::$app->getView()->hook('cp.entries.edit.meta', [$this, 'renderEntryElementMap']);
         Craft::$app->getView()->hook('cp.assets.edit.meta', [$this, 'renderAssetElementMap']);
-        Craft::$app->getView()->hook('cp.categories.edit.meta', [$this, 'renderCategoryElementMap']);
+        Craft::$app->getView()->hook('cp.categories.edit.details', [$this, 'renderCategoryElementMap']);
         Craft::$app->getView()->hook('cp.users.edit.meta', [$this, 'renderUserElementMap']);
         Craft::$app->getView()->hook('cp.globals.edit.content', [$this, 'renderGlobalsElementMap']);
         Craft::$app->getView()->hook('cp.commerce.product.edit.details', [$this, 'renderProductElementMap']);

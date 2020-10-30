@@ -154,6 +154,7 @@ class Renderer extends Component
 
         return MatrixBlock::find()
             ->ownerId($elementIds)
+            ->site('*')
             ->ids();
     }
 
