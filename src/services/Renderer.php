@@ -437,7 +437,7 @@ class Renderer extends Component
         }
 
         if ($element instanceof Entry) {
-            $targets = Entry::find()->id($element->sourceId)->site('*')->ids();
+            $targets = Entry::find()->id($element->canonicalId)->site('*')->ids();
         } else {
             $targets = [$element->id];
         }

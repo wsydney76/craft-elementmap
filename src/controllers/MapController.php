@@ -29,11 +29,11 @@ class MapController extends Controller
                 $draftId = Craft::$app->request->getParam('draftId');
 
                 if ($draftId) {
-                    $element = Entry::find()->draftId($draftId)->anyStatus()->site('*')->preferSites([$site])->unique()->one();
+                    $element = Entry::find()->draftId($draftId)->provisionalDrafts(null)->anyStatus()->site('*')->preferSites([$site])->unique()->one();
                 } else {
                     $element = Entry::find()->id($id)->anyStatus()->site('*')->preferSites([$site])->unique()->one();
                     if (!$element) {
-                        $element = Entry::find()->drafts(true)->id($id)->anyStatus()->site('*')->preferSites([$site])->unique()->one();
+                        $element = Entry::find()->drafts(true)->provisionalDrafts(null)->id($id)->anyStatus()->site('*')->preferSites([$site])->unique()->one();
                     }
                     if (!$element) {
                         $element = Entry::find()->revisions(true)->id($id)->anyStatus()->site('*')->preferSites([$site])->unique()->one();
