@@ -1,3 +1,7 @@
+## [2.0.0] 2021-08-09
+
+- Supports Craft 3.7
+
 ## [1.4.2] 2020-03-06
 
 - Fixed a bug where fetching relationships via ajax could end up in a 403 error.
