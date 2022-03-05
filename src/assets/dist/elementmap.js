@@ -1,7 +1,8 @@
 var $btn = $('#map-btn');
 
 $btn.on('click', function() {
-    $.get(ajaxBaseUrl + '/' + elementId + '?draftId=' + draftId )
+    alert(ajaxBaseUrl)
+    $.get(ajaxBaseUrl + '&draftId=' + draftId )
         .done(function(data) {
             hud = new new Garnish.HUD($btn, data, {
                 orientations: ['top', 'bottom', 'right', 'left'],

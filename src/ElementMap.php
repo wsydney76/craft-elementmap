@@ -15,6 +15,7 @@ use craft\elements\Asset;
 use craft\elements\Category;
 use craft\elements\Entry;
 use craft\elements\User;
+use craft\events\DefineHtmlEvent;
 use craft\events\RegisterElementTableAttributesEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\events\SetElementTableAttributeHtmlEvent;
@@ -39,7 +40,6 @@ class ElementMap extends Plugin
     public function init()
     {
 
-
         parent::init();
 
         $this->setComponents([
@@ -54,12 +54,20 @@ class ElementMap extends Plugin
         });
 
         // Render element maps within the appropriate template hooks.
-        Craft::$app->getView()->hook('cp.entries.edit.meta', [$this, 'renderEntryElementMap']);
-        Craft::$app->getView()->hook('cp.assets.edit.meta', [$this, 'renderAssetElementMap']);
-        Craft::$app->getView()->hook('cp.categories.edit.details', [$this, 'renderCategoryElementMap']);
+//        Craft::$app->getView()->hook('cp.entries.edit.meta', [$this, 'renderEntryElementMap']);
+//        Craft::$app->getView()->hook('cp.assets.edit.meta', [$this, 'renderAssetElementMap']);
+//        Craft::$app->getView()->hook('cp.categories.edit.details', [$this, 'renderCategoryElementMap']);
         Craft::$app->getView()->hook('cp.users.edit.meta', [$this, 'renderUserElementMap']);
         Craft::$app->getView()->hook('cp.globals.edit.content', [$this, 'renderGlobalsElementMap']);
-        Craft::$app->getView()->hook('cp.commerce.product.edit.details', [$this, 'renderProductElementMap']);
+//        Craft::$app->getView()->hook('cp.commerce.product.edit.details', [$this, 'renderProductElementMap']);
+
+        Event::on(
+            Entry::class,
+            Entry::EVENT_DEFINE_SIDEBAR_HTML,
+            function(DefineHtmlEvent $event) {
+                $event->html .= $this->renderMap($event->sender, 'entry');;
+            }
+        );
 
         // Allow some elements to have map data shown in their overview tables.
         Event::on(Asset::class, Element::EVENT_REGISTER_TABLE_ATTRIBUTES, [$this, 'registerTableAttributes']);
@@ -72,11 +80,9 @@ class ElementMap extends Plugin
         Event::on(User::class, Element::EVENT_SET_TABLE_ATTRIBUTE_HTML, [$this, 'getTableAttributeHtml']);
         Event::on(Product::class, Element::EVENT_REGISTER_TABLE_ATTRIBUTES, [$this, 'registerTableAttributes']);
         Event::on(Product::class, Element::EVENT_SET_TABLE_ATTRIBUTE_HTML, [$this, 'getTableAttributeHtml']);
-
-
     }
 
-    protected function createSettingsModel()
+    protected function createSettingsModel(): ?\craft\base\Model
     {
         return new Settings();
     }
