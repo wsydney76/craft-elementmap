@@ -1,7 +1,6 @@
 var $btn = $('#map-btn');
 
 $btn.on('click', function() {
-    alert(ajaxBaseUrl)
     $.get(ajaxBaseUrl + '&draftId=' + draftId )
         .done(function(data) {
             hud = new new Garnish.HUD($btn, data, {
