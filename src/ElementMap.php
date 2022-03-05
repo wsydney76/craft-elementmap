@@ -68,6 +68,20 @@ class ElementMap extends Plugin
                 $event->html .= $this->renderMap($event->sender, 'entry');;
             }
         );
+        Event::on(
+            Category::class,
+            Category::EVENT_DEFINE_SIDEBAR_HTML,
+            function(DefineHtmlEvent $event) {
+                $event->html .= $this->renderMap($event->sender, 'category');;
+            }
+        );
+        Event::on(
+            Asset::class,
+            Asset::EVENT_DEFINE_SIDEBAR_HTML,
+            function(DefineHtmlEvent $event) {
+                $event->html .= $this->renderMap($event->sender, 'asset');;
+            }
+        );
 
         // Allow some elements to have map data shown in their overview tables.
         Event::on(Asset::class, Element::EVENT_REGISTER_TABLE_ATTRIBUTES, [$this, 'registerTableAttributes']);
