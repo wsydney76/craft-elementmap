@@ -613,7 +613,7 @@ class Renderer extends Component
             $volumeName = $element->volume->name;
             $results[] = [
                 'id' => $element->id,
-                'image' => $imageBaseUrl . $element->uid,
+                'image' => $element->getUrl(['width' => 32, 'height' => 32]),
                 'title' => $element->title . ' (' . $volumeName . ')',
                 'url' => $element->cpEditUrl,
                 'sort' => self::ELEMENT_TYPE_SORT_MAP[get_class($element)] . $volumeName
