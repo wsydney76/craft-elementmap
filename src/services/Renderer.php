@@ -342,7 +342,7 @@ class Renderer extends Component
         return (new Query())
             ->select('[[e.id]] AS id, [[e.type]] AS type')
             ->from('{{%matrixblocks}} mb')
-            ->leftJoin('{{%elements}} e', '[[mb.ownerId]] = [[e.id]]')
+            ->leftJoin('{{%elements}} e', '[[mb.primaryOwnerId]] = [[e.id]]')
             ->where($conditions)
             ->all();
     }
