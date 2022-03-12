@@ -61,27 +61,30 @@ class ElementMap extends Plugin
         Craft::$app->getView()->hook('cp.globals.edit.content', [$this, 'renderGlobalsElementMap']);
 //        Craft::$app->getView()->hook('cp.commerce.product.edit.details', [$this, 'renderProductElementMap']);
 
-        Event::on(
-            Entry::class,
-            Entry::EVENT_DEFINE_SIDEBAR_HTML,
-            function(DefineHtmlEvent $event) {
-                $event->html .= $this->renderMap($event->sender, 'entry');;
-            }
-        );
-        Event::on(
-            Category::class,
-            Category::EVENT_DEFINE_SIDEBAR_HTML,
-            function(DefineHtmlEvent $event) {
-                $event->html .= $this->renderMap($event->sender, 'category');;
-            }
-        );
-        Event::on(
-            Asset::class,
-            Asset::EVENT_DEFINE_SIDEBAR_HTML,
-            function(DefineHtmlEvent $event) {
-                $event->html .= $this->renderMap($event->sender, 'asset');;
-            }
-        );
+        // Dont' show button in slideout editors
+        if (!Craft::$app->request->isAjax) {
+            Event::on(
+                Entry::class,
+                Entry::EVENT_DEFINE_SIDEBAR_HTML,
+                function(DefineHtmlEvent $event) {
+                    $event->html .= $this->renderMap($event->sender, 'entry');;
+                }
+            );
+            Event::on(
+                Category::class,
+                Category::EVENT_DEFINE_SIDEBAR_HTML,
+                function(DefineHtmlEvent $event) {
+                    $event->html .= $this->renderMap($event->sender, 'category');;
+                }
+            );
+            Event::on(
+                Asset::class,
+                Asset::EVENT_DEFINE_SIDEBAR_HTML,
+                function(DefineHtmlEvent $event) {
+                    $event->html .= $this->renderMap($event->sender, 'asset');;
+                }
+            );
+        }
 
         // Allow some elements to have map data shown in their overview tables.
         Event::on(Asset::class, Element::EVENT_REGISTER_TABLE_ATTRIBUTES, [$this, 'registerTableAttributes']);

@@ -1,3 +1,7 @@
+## [4.0.x] 2022-03-xx
+
+- Preparing for Craft 4 (Beta)
+
 ## [2.0.0] 2021-08-09
 
 - Supports Craft 3.7
