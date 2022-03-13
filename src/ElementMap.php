@@ -62,7 +62,7 @@ class ElementMap extends Plugin
 //        Craft::$app->getView()->hook('cp.commerce.product.edit.details', [$this, 'renderProductElementMap']);
 
         // Dont' show button in slideout editors
-        if (!Craft::$app->request->isAjax) {
+        if (!Craft::$app->request->isConsoleRequest && !Craft::$app->request->isAjax) {
             Event::on(
                 Entry::class,
                 Entry::EVENT_DEFINE_SIDEBAR_HTML,
