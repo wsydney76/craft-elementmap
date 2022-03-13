@@ -2,7 +2,7 @@
 	"name": "wsydney76/elementmap",
 	"description": "Lists related elements.",
 	"type": "craft-plugin",
-	"version": "4.0.5",
+	"version": "4.0.6",
 	"license": "MIT",
   "authors": [
     {
