@@ -19,6 +19,7 @@ use craft\elements\db\TagQuery;
 use craft\elements\db\UserQuery;
 use craft\elements\Entry;
 use craft\elements\MatrixBlock;
+use craft\elements\User;
 use wsydney76\elementmap\ElementMap;
 use yii\base\Component;
 
@@ -496,17 +497,33 @@ class Renderer extends Component
         $criteria->site('*');
         $criteria->unique();
         $criteria->preferSites([$siteId]);
-
+        $criteria->provisionalDrafts(null);
+        $criteria->drafts(null);
         $criteria->anyStatus();
         $elements = $criteria->all();
 
         $results = [];
+
+        /** @var Entry $element */
         foreach ($elements as $element) {
             $sectionName = Craft::t('site', $element->section->name);
+
+            $text = $sectionName;
+            if ($element->isProvisionalDraft) {
+                $text .= ", " . Craft::t('elementmap', 'Provisional Draft');
+                $user = User::findOne($element->creatorId);
+                if ($user) {
+                    $text .= ", " . $user->username;
+                }
+
+            } elseif ($element->getIsDraft()) {
+                $text .= ", " . Craft::t('elementmap', 'Draft');
+            }
+
             $results[] = [
                 'id' => $element->id,
                 'icon' => '@vendor/craftcms/cms/src/icons/newspaper.svg',
-                'title' => $element->title . ' (' . $sectionName . ')',
+                'title' => $element->title . ' (' . $text . ')',
                 'url' => $element->cpEditUrl,
                 'sort' => self::ELEMENT_TYPE_SORT_MAP[get_class($element)] . $sectionName
             ];
