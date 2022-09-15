@@ -1,3 +1,7 @@
+## [4.1.0] 2022-09-15
+
+- Shows incoming relationships from drafts and provisional drafts. (Beta)
+
 ## [4.0.x] 2022-03-xx
 
 - Preparing for Craft 4 (Beta)
