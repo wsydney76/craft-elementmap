@@ -10,4 +10,6 @@ return [
     'References To (Count)' => 'Verknüpft auf (Anzahl)',
     'References To' => 'Verknüpft auf',
     'Reload page to refresh' => 'Neu laden zum Aktualisieren',
+    'Provisional Draft' => 'Provisionischer Entwurf',
+    'Draft' => 'Entwurf',
 ];
