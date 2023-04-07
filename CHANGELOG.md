@@ -1,3 +1,7 @@
+## [4.1.1] 2023-04-06
+
+- Fixes a bug where the relationship popup did not show up in single site installs
+
 ## [4.1.0] 2022-09-15
 
 - Shows incoming relationships from drafts and provisional drafts. (Beta)

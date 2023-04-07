@@ -1,12 +1,20 @@
 var $btn = $('#map-btn');
 
 $btn.on('click', function() {
-    $.get(ajaxBaseUrl + '&draftId=' + draftId )
+
+    if(ajaxBaseUrl.indexOf('?') === -1) {
+        url = ajaxBaseUrl + '?draftId=' + draftId;
+    } else {
+        url = ajaxBaseUrl + '&draftId=' + draftId;
+    }
+
+
+    $.get(url)
         .done(function(data) {
             hud = new new Garnish.HUD($btn, data, {
                 orientations: ['top', 'bottom', 'right', 'left'],
                 hudClass: 'hud guide-hud',
-            });;
+            });
         })
         .fail(function() {
             alert("error");
